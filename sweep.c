@@ -4,13 +4,19 @@
 #include <string.h>
 #include <time.h>
 #include <assert.h>
-//#define MAX_WIDTH 50
-//#define MAX_HEIGHT 50
+#define MAX_WIDTH 30
+#define MAX_HEIGHT 30
+struct block{
+	char shown : 1;
+	char nmines : 7;
+};
+
 static size_t width, height, nmines;
 static struct block map[MAX_WIDTH][MAX_HEIGHT];
 //static int finished;
 static int configured = 0; 
 static int nrestblocks;
+
 #define SWAP_S(m,n) { \
 	unsigned char __buf[sizeof(m)]; \
 	assert(sizeof m == sizeof n); \
