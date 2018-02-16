@@ -193,7 +193,7 @@ static void DrawMap(HDC hDC) {
 	//DWORD		dwBackColor;
 	GetClientRect(hWnd,&rcClient);
 	printf("w h = %d %d\n",g_uWidth,g_uHeight);
-	hDefaultBrush = GetStockObject(LTGRAY_BRUSH);
+	hDefaultBrush = GetStockObject(WHITE_BRUSH);
 	hMineBrush = GetStockObject(BLACK_BRUSH);
 	hNumBrush = GetStockObject(DKGRAY_BRUSH);
 	hZeroBrush = GetStockObject(GRAY_BRUSH);
