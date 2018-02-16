@@ -47,7 +47,7 @@ static void map_click(int x,int y) {
 
 int main() {
 	ui_init();
-	setconf(8, 8, 10);
+	setconf(8, 8, 6);
 	ui_map_setsize(8, 8);
 	ui_reg_startbtn_click(startbtn_click);
 	ui_reg_map_click(map_click);
