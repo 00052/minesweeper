@@ -153,15 +153,25 @@ static void auto_sweep(unsigned int x, unsigned int y) {
 			auto_sweep(x,y-1);
 			auto_sweep(x+1,y);
 			auto_sweep(x,y+1);
+
+			auto_sweep(x-1,y-1);
+			auto_sweep(x+1,y-1);
+			auto_sweep(x+1,y+1);
+			auto_sweep(x-1,y+1);
+
 		}
 	}
 }
-
-static void show_all() {
+/**
+ * show_all
+ * fill all block -> shown with 1
+ */
+static void show_all_mine() {
 	int i,j;
 	for(i=0; i<height; i++) 
 		for(j=0; j<width; j++) {
-			map[j][i].shown = 1;
+			if(map[j][i].nmines == 9)
+				map[j][i].shown = 1;
 		}
 
 }
@@ -177,7 +187,7 @@ enum CLICK_RESULT click(unsigned int x, unsigned int y) {
 
 	if(map[x][y].nmines == 9) {//borm
 		nrestblocks = 0;
-		show_all();
+		show_all_mine();
 		return BORM;
 	} else {
 		auto_sweep(x,y);

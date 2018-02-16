@@ -7,8 +7,8 @@ enum CLICK_RESULT{
 	INVALID,
 	WAN
 };
-int setconf(size_t w, size_t h, unsigned int n);
-void getconf(size_t *w, size_t *h, unsigned int *n);
+int setconf(unsigned int w, unsigned int h, unsigned int n);
+void getconf(unsigned *w, unsigned int *h, unsigned int *n);
 void resetmap();
 enum CLICK_RESULT click(unsigned int x, unsigned int y);
 int gethidenum();

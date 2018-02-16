@@ -1,7 +1,7 @@
 all:minesweeper.exe
 
-minesweeper.exe: sweep.h sweep.c test.c
-	gcc -o $@ sweep.c test.c
+minesweeper.exe: sweep.h sweep.c ui.c ui.h main.c
+	gcc -o $@ sweep.c ui.c main.c -lGdi32
 clean:
 	rm -f minesweeper.exe
 

@@ -78,6 +78,12 @@ int ui_show(void) {
 	return 0;
 }
 
+int ui_map_clear(void) {
+	memset(g_aMap,-1,sizeof(g_aMap));
+	ui_map_refresh();
+	return 0;
+}
+
 int ui_map_setenable(int enable) {
 	assert(g_bInit == TRUE);
 	
@@ -138,6 +144,10 @@ int ui_map_refresh(void) {
 	return 0;
 }
 
+int ui_show_message(char *msg) {
+	MessageBoxA(hWnd, msg, "Mine Sweeper", MB_OK);
+}
+
 int ui_loop() {
 	MSG msg;
 	assert(g_bInit == TRUE);
@@ -177,7 +187,7 @@ static void DrawMap(HDC hDC) {
 	int 		i,j;
 	POINT 		pt;
 	RECT		rcClient,rcBlock;
-	HBRUSH 		hMineBrush, hDefaultBrush, hNumBrush;
+	HBRUSH 		hMineBrush, hDefaultBrush, hNumBrush, hZeroBrush;
 	TCHAR		szNumber[2];
 	
 	//DWORD		dwBackColor;
@@ -185,7 +195,8 @@ static void DrawMap(HDC hDC) {
 	printf("w h = %d %d\n",g_uWidth,g_uHeight);
 	hDefaultBrush = GetStockObject(LTGRAY_BRUSH);
 	hMineBrush = GetStockObject(BLACK_BRUSH);
-	hNumBrush = GetStockObject(GRAY_BRUSH);
+	hNumBrush = GetStockObject(DKGRAY_BRUSH);
+	hZeroBrush = GetStockObject(GRAY_BRUSH);
 	for(i = 0; i < g_uHeight; i++) {
 		for(j = 0; j < g_uWidth; j++) {
 			GetBlockRect(j, i, &rcBlock);
@@ -198,8 +209,12 @@ static void DrawMap(HDC hDC) {
 				SelectObject(hDC, hMineBrush);
 				FillRect(hDC, &rcBlock, hMineBrush);
 				break;
+			case 0:
+				SelectObject(hDC, hZeroBrush);
+				FillRect(hDC, &rcBlock, hZeroBrush);
+				break;
 			default:
-				assert(g_aMap[j][i] >= 0 && g_aMap[j][i] <= 8);
+				assert(g_aMap[j][i] >= 1 && g_aMap[j][i] <= 8);
 				SelectObject(hDC, hNumBrush);
 				szNumber[1] = TEXT('\0');
 				szNumber[0] = TEXT('0') + g_aMap[j][i];
@@ -255,7 +270,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
 			EndPaint(hWnd,&ps);
 		}
 		break;
-	case WM_LBUTTONUP:
+	case WM_LBUTTONDOWN:
 		{
 			LONG x,y;
 			x = GET_X_LPARAM(lParam); 
