@@ -1,17 +1,19 @@
-#include "ui.h"
 #include <windows.h>
 #include <wingdi.h>
 #include <stdio.h>
 #include <windowsx.h>
 #include <assert.h>
+#include "ui.h"
+#include "resource.h"
 
 #define MAP_LEFT 10
 #define MAP_TOP 80
-#define BLOCK_WIDTH 40
+#define BLOCK_WIDTH 25
 
 #define IDC_START 1
 #define IDC_CONFIGURE 2
 #define IDC_QUIT 3
+#define IDC_ABOUT 4
 
 TCHAR szClassName[] = TEXT("MineSweeperClass");
 HWND hWnd;
@@ -43,21 +45,25 @@ static HMENU hRootMenu;
 static const DWORD dwWindowStyle = WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX;
 
 static void __CreateMenu() {
-	HMENU hGameMenu;
+	HMENU hGameMenu,hHelpMenu;
 
 	hRootMenu = CreateMenu();
 	hGameMenu = CreatePopupMenu();
+	hHelpMenu = CreatePopupMenu();
 
 	if(hRootMenu == 0) {
-		printf("CreateMenu error %d\n",GetLastError());
+		printf("CreateMenu error %ld\n",GetLastError());
 		return;
 	}
 
-	AppendMenu(hRootMenu,MF_POPUP,(UINT_PTR)hGameMenu,TEXT("Game"));
+	AppendMenu(hRootMenu,MF_POPUP,(UINT_PTR)hGameMenu,TEXT("Game (&G)"));
 	AppendMenu(hGameMenu,MF_STRING,IDC_START,TEXT("Start(&S)"));
 	AppendMenu(hGameMenu,MF_STRING,IDC_CONFIGURE,TEXT("Configure(&C)"));
-	AppendMenu(hGameMenu,MF_SEPARATOR,IDC_QUIT,0);
-	AppendMenu(hGameMenu,MF_STRING,2,TEXT("Quit"));
+	AppendMenu(hGameMenu,MF_SEPARATOR,0,0);
+	AppendMenu(hGameMenu,MF_STRING,IDC_QUIT,TEXT("Quit(&Q)"));
+
+	AppendMenu(hRootMenu,MF_POPUP,(UINT_PTR)hHelpMenu,TEXT("Help(&H)"));
+	AppendMenu(hHelpMenu,MF_STRING,IDC_ABOUT,TEXT("About(&Q)"));
 
 }
 
@@ -122,7 +128,7 @@ int ui_map_setenable(int enable) {
 
 int ui_map_setsize(unsigned int width,unsigned int height) {
 	RECT  rcMainWindow,rcClient;
-	printf("ui_map_setsize()\n");
+	printf("ui_map_setsize(%d,%d)\n",width,height);
 	assert(g_bInit == TRUE);
 	g_uWidth = width;
 	g_uHeight = height;
@@ -130,10 +136,11 @@ int ui_map_setsize(unsigned int width,unsigned int height) {
 	GetWindowRect(hWnd, &rcMainWindow);   //获得程序窗口位于屏幕坐标
 	//GetClientRect(hWnd, &rcClient);
 	AdjustWindowRect(&rcClient, dwWindowStyle/*|WS_SYSMENU|WS_SYSMENU*//*&(~WS_SIZEBOX)*/, TRUE);
+	//printf("window width height = %d %d\n",rcClient.right-rcClient.left, rcClient.bottom - rcClient.top);
 	//MoveWindow(hWnd,rcMainWindow.left,rcMainWindow.top,,0,TRUE);
 	MoveWindow(hWnd,rcMainWindow.left,rcMainWindow.top,rcClient.right-rcClient.left, rcClient.bottom - rcClient.top, TRUE);
-	//SetWindowPos(hWnd,NULL,(BUF_LEFT + rc,0,0,0,SWP_NOZORDER|SWP_NOSIZE);
-
+	//SetWindowPos(hWnd,NULL,rcMainWindow.left,rcMainWindow.top,rcClient.right-rcClient.left, rcClient.bottom - rcClient.top,SWP_NOZORDER|SWP_NOSIZE);
+	InvalidateRect(hWnd, NULL, TRUE);
 	ui_map_refresh();
 	return 0;
 }
@@ -163,11 +170,10 @@ int ui_map_setblock(int x,int y,char n) {
 	assert(g_bInit == TRUE);
 	assert(n>=-1 && n<=9);
 	g_aMap[x][y] = n;
-	
+	return 0;
 }
 
 int ui_map_refresh(void) {
-	RECT rcClient={0};
 	assert(g_bInit == TRUE);
 	//GetClientRect(hWnd,&rcClient);
 	//UpdateWindow(hWnd);
@@ -177,6 +183,7 @@ int ui_map_refresh(void) {
 
 int ui_show_message(char *msg) {
 	MessageBoxA(hWnd, msg, "Mine Sweeper", MB_OK);
+	return 0;
 }
 
 int ui_loop() {
@@ -260,22 +267,77 @@ static void DrawMap(HDC hDC) {
 
 	for(i = 0; i <= g_uHeight; i++) {
 		MoveToEx(hDC, MAP_LEFT, MAP_TOP+BLOCK_WIDTH*i, &pt);
-		LineTo(hDC, MAP_LEFT+BLOCK_WIDTH*(g_uHeight), MAP_TOP+BLOCK_WIDTH*i);
+		LineTo(hDC, MAP_LEFT+BLOCK_WIDTH*(g_uWidth), MAP_TOP+BLOCK_WIDTH*i);
 	}
 	for(i=0; i <= g_uWidth; i++) {
 		MoveToEx(hDC, MAP_LEFT + BLOCK_WIDTH * i, MAP_TOP, &pt);
-		LineTo(hDC , MAP_LEFT + BLOCK_WIDTH * i,MAP_TOP+BLOCK_WIDTH * (g_uWidth ));
+		LineTo(hDC , MAP_LEFT + BLOCK_WIDTH * i,MAP_TOP+BLOCK_WIDTH * (g_uHeight ));
 	}
 
 }
 
+static BOOL CALLBACK ConfigDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam) {
+	//HWND hListBox;
+	switch (Msg)
+	{
+	case WM_INITDIALOG:
+		//hListBox = GetDlgItem(hDlg, IDC_LEVEL);
+		SendDlgItemMessage(hDlg,IDC_LEVEL,CB_ADDSTRING,0,(LPARAM)TEXT("Easy"));
+		SendDlgItemMessage(hDlg,IDC_LEVEL,CB_ADDSTRING,0,(LPARAM)TEXT("General"));
+		SendDlgItemMessage(hDlg,IDC_LEVEL,CB_ADDSTRING,0,(LPARAM)TEXT("Defficult"));
+		SendDlgItemMessage(hDlg,IDC_LEVEL,CB_ADDSTRING,0,(LPARAM)TEXT("Custom"));
+		SendDlgItemMessage(hDlg,IDC_LEVEL,CB_SETCURSEL,0,0);
+		//SendDlgItemMessage(hListBox,1,LB_ADDSTRING,0,(LPARAM)TEXT("111"));
+		return TRUE;
+	case WM_COMMAND:
+		switch(LOWORD(wParam)) {
+			DWORD 	dwIndex;
+			int 	w, h, n;
+			CHAR 	szText[32];
+		case IDOK:
+			dwIndex = SendDlgItemMessage(hDlg,IDC_LEVEL,CB_GETCURSEL,0,0);
+			printf("cursel = %lu\n",dwIndex);
+			if(dwIndex < 3) {
+				g_lpfnMapConfigChangeCallBack(dwIndex, 0, 0, 0);
+				EndDialog(hDlg,0);
+				break;
+			}
+				
+			GetDlgItemTextA(hDlg, IDC_MAP_WIDTH, szText, sizeof(szText));
+			if(sscanf(szText, "%d", &w) < 1)
+				goto error_format;
 
+			GetDlgItemTextA(hDlg, IDC_MAP_HEIGHT, szText, sizeof(szText));
+			if(sscanf(szText, "%d", &h) < 1) 
+				goto error_format;
 
-static LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-	TCHAR wszInfo[1024];
-	HINSTANCE thisInstance = GetModuleHandle(NULL);
+			GetDlgItemTextA(hDlg, IDC_MAP_MINE_NUM, szText, sizeof(szText));
+			if(sscanf(szText, "%d", &n) < 1)
+				goto error_format;
+
+			printf("w h n = %d %d %d\n", w, h, n);
+			g_lpfnMapConfigChangeCallBack(CUSTOM, w, h, n);
+			EndDialog(hDlg,0);
+			break;
+		case IDCANCEL:
+			EndDialog(hDlg,0);
+			printf("cancel\n");
+		}
+		return TRUE;
+	default:
+		return FALSE;
+	}
+	return FALSE; 
+error_format:
+	MessageBox(hWnd, TEXT("Input format is incorrect."), TEXT("Error"), MB_ICONINFORMATION);
+	return TRUE;
+}
+
+static LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
+	//TCHAR wszInfo[1024];
+	//HINSTANCE hInstance = GetModuleHandle(NULL);
 	PAINTSTRUCT  ps;
+	
 	switch (Msg)
 	{
 	case (WM_USER + 1):
@@ -291,11 +353,17 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
 	case WM_COMMAND:
 		switch(LOWORD(wParam)) {
 		case IDC_START:
+			g_lpfnStartButtonClickCallBack();
 			printf("0\n");
 			break;
 		case IDC_CONFIGURE:
+			DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_CONFIG_DIALOG), hWnd, ConfigDialogProc);
 			break;
 		case IDC_QUIT:
+			PostQuitMessage(0);
+			break;
+		case IDC_ABOUT:
+			MessageBox(hWnd, TEXT("Mine Sweeper\n\nCopyleft(C)\nLisence: GNU General Public Lisence version 2\n"),TEXT("About"), MB_OK);
 			break;
 		}
 		/*
@@ -318,7 +386,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
 			LONG x,y;
 			x = GET_X_LPARAM(lParam); 
 			y = GET_Y_LPARAM(lParam); 
-			printf("%d , %d\n",x,y);
+			printf("%ld, %ld\n",x,y);
 			if(g_bMapEnable == TRUE
 				&&g_lpfnMapClickCallBack != NULL
 				&&x > MAP_LEFT && x < MAP_LEFT + BLOCK_WIDTH * g_uWidth 
@@ -327,7 +395,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
 			} else if(g_lpfnStartButtonClickCallBack != NULL
 				&& x > rcStartButton.left && x < rcStartButton.right 
 				&& y > rcStartButton.top && y < rcStartButton.bottom) {
-				g_lpfnStartButtonClickCallBack();
+				SendMessage(hWnd, WM_COMMAND, IDC_START, 0);
 
 			}
 

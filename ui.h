@@ -1,8 +1,15 @@
 #ifndef UI_H
 #define UI_H
+
+enum UI_MAP_LEVEL {
+	EASY,
+	GENERAL,
+	DEFAULT,
+	CUSTOM
+};
 typedef void(*STARTBTN_CLICK)();
 typedef void(*MAP_CLICK)(int x,int y);
-typedef void(*MAPCONFIG_CHANGE)(int w, int h, int n);
+typedef void(*MAPCONFIG_CHANGE)(enum UI_MAP_LEVEL level, int w, int h, int n);
 
 int ui_init(void);
 int ui_show(void);

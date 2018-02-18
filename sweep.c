@@ -4,8 +4,8 @@
 #include <string.h>
 #include <time.h>
 #include <assert.h>
-#define MAX_WIDTH 30
-#define MAX_HEIGHT 30
+#define MAX_WIDTH 40
+#define MAX_HEIGHT 40
 struct block{
 	char shown : 1;
 	char nmines : 7;
@@ -41,7 +41,6 @@ static void show_map() {
 	for(i=0;i<height;i++) {
 		fputs("* ",stdout);
 		for(j=0;j<width;j++) {
-			struct block *p = &map[j][i];
 			if(map[j][i].nmines == 9)
 				fputs(" *",stdout);
 			else
@@ -91,7 +90,6 @@ void resetmap() {
 		map[i%width][i/width].nmines = 9; 
 	//show_map();
 	for(i=0;i<nmines;i++) { //Dislocale mines which added before.
-		char tmp;
 		randval = rand() % len;
 		p = &map[i%width][i/width]; 
 		q = &map[randval % width][randval/width];
