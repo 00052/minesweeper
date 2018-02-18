@@ -4,6 +4,7 @@
 static void startbtn_click() {
 	resetmap();
 	ui_map_clear();
+	ui_map_setenable(1);
 }
 /*
 static void update_ui(int width, int height) {
@@ -37,8 +38,10 @@ static void map_click(int x,int y) {
 		}
 	ui_map_refresh();
 	if(cr == BORM) {
+		ui_map_setenable(0);
 		ui_show_message("Boom !");
 	} else if(cr == WAN) {
+		ui_map_setenable(0);
 		ui_show_message("You Win.");
 	}
 	

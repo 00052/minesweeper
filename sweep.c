@@ -182,7 +182,6 @@ enum CLICK_RESULT click(unsigned int x, unsigned int y) {
 		return INVALID;
 	if(map[x][y].shown == 1)
 		return INVALID;
-	//map[x][y].shown = 1;//Open block
 	//show_map();
 
 	if(map[x][y].nmines == 9) {//borm

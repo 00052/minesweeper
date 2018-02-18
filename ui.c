@@ -9,6 +9,9 @@
 #define MAP_TOP 80
 #define BLOCK_WIDTH 40
 
+#define IDC_START 1
+#define IDC_CONFIGURE 2
+#define IDC_QUIT 3
 
 TCHAR szClassName[] = TEXT("MineSweeperClass");
 HWND hWnd;
@@ -33,6 +36,30 @@ static CHAR	 g_aMap[50][50];
 static UINT g_uWidth,g_uHeight;
 static RECT rcStartButton;
 
+static BOOL g_bMapEnable = FALSE;
+
+static HMENU hRootMenu;
+
+static const DWORD dwWindowStyle = WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX;
+
+static void __CreateMenu() {
+	HMENU hGameMenu;
+
+	hRootMenu = CreateMenu();
+	hGameMenu = CreatePopupMenu();
+
+	if(hRootMenu == 0) {
+		printf("CreateMenu error %d\n",GetLastError());
+		return;
+	}
+
+	AppendMenu(hRootMenu,MF_POPUP,(UINT_PTR)hGameMenu,TEXT("Game"));
+	AppendMenu(hGameMenu,MF_STRING,IDC_START,TEXT("Start(&S)"));
+	AppendMenu(hGameMenu,MF_STRING,IDC_CONFIGURE,TEXT("Configure(&C)"));
+	AppendMenu(hGameMenu,MF_SEPARATOR,IDC_QUIT,0);
+	AppendMenu(hGameMenu,MF_STRING,2,TEXT("Quit"));
+
+}
 
 int ui_init(void) {
 	
@@ -53,12 +80,14 @@ int ui_init(void) {
 	wc.hInstance = hInstance;
 	wc.lpfnWndProc = WndProc;
 	wc.lpszClassName = szClassName;
+
 	wc.lpszMenuName = NULL;
 	wc.style = 0;
-
 	RegisterClassEx(&wc);
 
-	hWnd = CreateWindowEx(WS_EX_OVERLAPPEDWINDOW, szClassName, TEXT("Mine Sweeper"), WS_VISIBLE | WS_SYSMENU, 400, 400, 800, 800, NULL, NULL, hInstance, NULL);
+	__CreateMenu();
+
+	hWnd = CreateWindowEx(WS_EX_OVERLAPPEDWINDOW, szClassName, TEXT("Mine Sweeper"), dwWindowStyle, 400, 400, 800, 800, NULL, hRootMenu, hInstance, NULL);
 
 	//EnumChildWindows(hWnd, EnumChildProc, 0);
 	
@@ -66,6 +95,7 @@ int ui_init(void) {
 
 	UpdateWindow(hWnd);
 
+	g_bMapEnable = TRUE;
 
 	g_bInit = TRUE;
 	return 0;
@@ -86,7 +116,8 @@ int ui_map_clear(void) {
 
 int ui_map_setenable(int enable) {
 	assert(g_bInit == TRUE);
-	
+	g_bMapEnable = enable;
+	return 0;
 }
 
 int ui_map_setsize(unsigned int width,unsigned int height) {
@@ -95,10 +126,10 @@ int ui_map_setsize(unsigned int width,unsigned int height) {
 	assert(g_bInit == TRUE);
 	g_uWidth = width;
 	g_uHeight = height;
-	SetRect(&rcClient, 0, 0, MAP_LEFT*2 + g_uWidth*BLOCK_WIDTH, MAP_TOP + MAP_LEFT + g_uHeight*BLOCK_WIDTH);
+	SetRect(&rcClient, 0, 0, MAP_LEFT*2 + g_uWidth*BLOCK_WIDTH + 5, MAP_TOP + MAP_LEFT + g_uHeight*BLOCK_WIDTH + 5);
 	GetWindowRect(hWnd, &rcMainWindow);   //获得程序窗口位于屏幕坐标
 	//GetClientRect(hWnd, &rcClient);
-	AdjustWindowRect(&rcClient, WS_OVERLAPPEDWINDOW/*&(~WS_SIZEBOX)*/, FALSE);
+	AdjustWindowRect(&rcClient, dwWindowStyle/*|WS_SYSMENU|WS_SYSMENU*//*&(~WS_SIZEBOX)*/, TRUE);
 	//MoveWindow(hWnd,rcMainWindow.left,rcMainWindow.top,,0,TRUE);
 	MoveWindow(hWnd,rcMainWindow.left,rcMainWindow.top,rcClient.right-rcClient.left, rcClient.bottom - rcClient.top, TRUE);
 	//SetWindowPos(hWnd,NULL,(BUF_LEFT + rc,0,0,0,SWP_NOZORDER|SWP_NOSIZE);
@@ -168,6 +199,7 @@ static void GetBlockRect(INT x, INT y, LPRECT pRect) {
 	pRect->right = pRect->left + BLOCK_WIDTH;
 	pRect->bottom = pRect->top + BLOCK_WIDTH;
 }
+
 static void DrawStartButton(HDC hDC) {
 	TCHAR		szStart[] = TEXT("Start");
 	HBRUSH		hBrush = CreateSolidBrush(GetSysColor(COLOR_BTNHILIGHT));
@@ -238,6 +270,7 @@ static void DrawMap(HDC hDC) {
 }
 
 
+
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
 	TCHAR wszInfo[1024];
@@ -253,15 +286,25 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
 		*/
 		break;
 	case WM_CREATE:
+		//__CreateMenu();
 		break;
 	case WM_COMMAND:
+		switch(LOWORD(wParam)) {
+		case IDC_START:
+			printf("0\n");
+			break;
+		case IDC_CONFIGURE:
+			break;
+		case IDC_QUIT:
+			break;
+		}
 		/*
 		if ((HWND)lParam == hChooseWnd)
 		*/
 		break;
 	case WM_PAINT:
 		{
-			RECT rcInfo = {10,10,80,20};
+			//RECT rcInfo = {10,10,80,20};
 			HDC hDC=BeginPaint(hWnd,&ps);
 			SetBkMode(hDC,TRANSPARENT);
 			//DrawText(hDC,TEXT("0 / 0"),-1,&rcInfo,DT_SINGLELINE|DT_CENTER|DT_VCENTER);
@@ -276,7 +319,8 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
 			x = GET_X_LPARAM(lParam); 
 			y = GET_Y_LPARAM(lParam); 
 			printf("%d , %d\n",x,y);
-			if(g_lpfnMapClickCallBack != NULL
+			if(g_bMapEnable == TRUE
+				&&g_lpfnMapClickCallBack != NULL
 				&&x > MAP_LEFT && x < MAP_LEFT + BLOCK_WIDTH * g_uWidth 
 				&& y > MAP_TOP && y < MAP_TOP + BLOCK_WIDTH * g_uHeight) {
 				g_lpfnMapClickCallBack((x - MAP_LEFT) / BLOCK_WIDTH , (y - MAP_TOP) / BLOCK_WIDTH);
