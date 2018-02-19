@@ -210,7 +210,9 @@ static void GetBlockRect(INT x, INT y, LPRECT pRect) {
 static void DrawStartButton(HDC hDC) {
 	TCHAR		szStart[] = TEXT("Start");
 	HBRUSH		hBrush = CreateSolidBrush(GetSysColor(COLOR_BTNHILIGHT));
-	rcStartButton.right = g_uWidth * BLOCK_WIDTH + MAP_LEFT;
+	RECT		rc;
+	GetClientRect(hWnd, &rc);
+	rcStartButton.right = rc.right - MAP_LEFT;//g_uWidth * BLOCK_WIDTH + MAP_LEFT;
 	rcStartButton.left = rcStartButton.right - 120;
 	rcStartButton.top = 10;
 	rcStartButton.bottom = 70;
@@ -324,7 +326,8 @@ static BOOL CALLBACK ConfigDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM
 				goto error_format;
 
 			printf("w h n = %d %d %d\n", w, h, n);
-			g_lpfnMapConfigChangeCallBack(CUSTOM, w, h, n);
+			if(g_lpfnMapConfigChangeCallBack(CUSTOM, w, h, n) == 0)
+				goto error_format;
 			EndDialog(hDlg,0);
 			break;
 		case IDCANCEL:

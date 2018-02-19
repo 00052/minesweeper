@@ -9,7 +9,7 @@ enum UI_MAP_LEVEL {
 };
 typedef void(*STARTBTN_CLICK)();
 typedef void(*MAP_CLICK)(int x,int y);
-typedef void(*MAPCONFIG_CHANGE)(enum UI_MAP_LEVEL level, int w, int h, int n);
+typedef int(*MAPCONFIG_CHANGE)(enum UI_MAP_LEVEL level, int w, int h, int n);
 
 int ui_init(void);
 int ui_show(void);

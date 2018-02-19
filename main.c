@@ -22,7 +22,7 @@ static void update_ui(int width, int height) {
 }
 */
 
-static void mapconfig_change(enum UI_MAP_LEVEL level, int w, int h, int n) {
+static int mapconfig_change(enum UI_MAP_LEVEL level, int w, int h, int n) {
 	switch(level) {
 	case EASY:
 		w = 12, h = 12, n = 10;
@@ -34,13 +34,15 @@ static void mapconfig_change(enum UI_MAP_LEVEL level, int w, int h, int n) {
 		w = 30, h = 16, n = 200;
 		break;
 	case CUSTOM:
-		break;
+		if(w < 5 || w > 40 || h < 5 || h > 40 || n > w*h/2)
+			return 0;
 	}
 	setconf(w, h, n);
 	ui_map_setsize(w, h);
 	resetmap();
 	ui_map_clear();
 	ui_map_setenable(1);
+	return 1;
 }
 
 static void map_click(int x,int y) {
