@@ -227,6 +227,7 @@ static void DrawMap(HDC hDC) {
 	POINT 		pt;
 	RECT		rcClient,rcBlock;
 	HBRUSH 		hMineBrush, hDefaultBrush, hNumBrush, hZeroBrush;
+	HPEN		hLinePen;
 	TCHAR		szNumber[2];
 	
 	//DWORD		dwBackColor;
@@ -236,6 +237,7 @@ static void DrawMap(HDC hDC) {
 	hMineBrush = GetStockObject(BLACK_BRUSH);
 	hNumBrush = GetStockObject(DKGRAY_BRUSH);
 	hZeroBrush = GetStockObject(GRAY_BRUSH);
+	hLinePen = CreatePen(PS_SOLID, 1, RGB(200,200,200));
 	for(i = 0; i < g_uHeight; i++) {
 		for(j = 0; j < g_uWidth; j++) {
 			GetBlockRect(j, i, &rcBlock);
@@ -270,12 +272,13 @@ static void DrawMap(HDC hDC) {
 		}
 	}
 
+	SelectObject(hDC,hLinePen);
 	for(i = 0; i <= g_uHeight; i++) {
-		MoveToEx(hDC, MAP_LEFT, MAP_TOP+BLOCK_WIDTH*i, &pt);
+		MoveToEx(hDC, MAP_LEFT, MAP_TOP+BLOCK_WIDTH*i, NULL);
 		LineTo(hDC, MAP_LEFT+BLOCK_WIDTH*(g_uWidth), MAP_TOP+BLOCK_WIDTH*i);
 	}
 	for(i=0; i <= g_uWidth; i++) {
-		MoveToEx(hDC, MAP_LEFT + BLOCK_WIDTH * i, MAP_TOP, &pt);
+		MoveToEx(hDC, MAP_LEFT + BLOCK_WIDTH * i, MAP_TOP, NULL);
 		LineTo(hDC , MAP_LEFT + BLOCK_WIDTH * i,MAP_TOP+BLOCK_WIDTH * (g_uHeight ));
 	}
 
