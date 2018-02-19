@@ -296,7 +296,14 @@ static BOOL CALLBACK ConfigDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM
 		SendDlgItemMessage(hDlg,IDC_LEVEL,CB_ADDSTRING,0,(LPARAM)TEXT("General"));
 		SendDlgItemMessage(hDlg,IDC_LEVEL,CB_ADDSTRING,0,(LPARAM)TEXT("Defficult"));
 		SendDlgItemMessage(hDlg,IDC_LEVEL,CB_ADDSTRING,0,(LPARAM)TEXT("Custom"));
-		SendDlgItemMessage(hDlg,IDC_LEVEL,CB_SETCURSEL,0,0);
+
+		EnableWindow(GetDlgItem(hDlg, IDC_MAP_WIDTH), FALSE);
+		EnableWindow(GetDlgItem(hDlg, IDC_MAP_HEIGHT), FALSE);
+		EnableWindow(GetDlgItem(hDlg, IDC_MAP_MINE_NUM), FALSE);
+
+
+		SendMessage(GetDlgItem(hDlg,IDC_LEVEL),CB_SETCURSEL,0,0);
+		
 		//SendDlgItemMessage(hListBox,1,LB_ADDSTRING,0,(LPARAM)TEXT("111"));
 		return TRUE;
 	case WM_COMMAND:
@@ -333,8 +340,30 @@ static BOOL CALLBACK ConfigDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM
 		case IDCANCEL:
 			EndDialog(hDlg,0);
 			printf("cancel\n");
+			break;
+		}
+
+		switch(HIWORD(wParam)) {
+			int iItemIndex;
+		case CBN_SELCHANGE:
+			iItemIndex = SendMessage(lParam, CB_GETCURSEL, 0, 0);
+			if(iItemIndex <3) {
+				EnableWindow(GetDlgItem(hDlg, IDC_MAP_WIDTH), FALSE);
+				EnableWindow(GetDlgItem(hDlg, IDC_MAP_HEIGHT), FALSE);
+				EnableWindow(GetDlgItem(hDlg, IDC_MAP_MINE_NUM), FALSE);
+			} else {
+				EnableWindow(GetDlgItem(hDlg, IDC_MAP_WIDTH), TRUE);
+				EnableWindow(GetDlgItem(hDlg, IDC_MAP_HEIGHT), TRUE);
+				EnableWindow(GetDlgItem(hDlg, IDC_MAP_MINE_NUM), TRUE);
+
+			}
+				
+			printf("selchange\n");
+			break;
+
 		}
 		return TRUE;
+
 	default:
 		return FALSE;
 	}
