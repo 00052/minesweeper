@@ -8,7 +8,7 @@
 
 #define MAP_LEFT 10
 #define MAP_TOP 80
-#define BLOCK_WIDTH 25
+#define BLOCK_WIDTH 20
 
 #define IDC_START 1
 #define IDC_CONFIGURE 2
@@ -240,13 +240,17 @@ static void DrawMap(HDC hDC) {
 		for(j = 0; j < g_uWidth; j++) {
 			GetBlockRect(j, i, &rcBlock);
 			switch(g_aMap[j][i]) {
+			case -2:
+				FillRect(hDC, &rcBlock, CreateSolidBrush(RGB(230,0,0)));
+				break;
 			case -1:
-				SelectObject(hDC, hDefaultBrush);
+				//SelectObject(hDC, hDefaultBrush);
 				FillRect(hDC, &rcBlock, hDefaultBrush);
 				break;
 			case 9:
 				SelectObject(hDC, hMineBrush);
-				FillRect(hDC, &rcBlock, hMineBrush);
+				//FillRect(hDC, &rcBlock, hMineBrush);
+				Ellipse(hDC, rcBlock.left+2, rcBlock.top+2, rcBlock.right-2, rcBlock.bottom-2);
 				break;
 			case 0:
 				SelectObject(hDC, hZeroBrush);
@@ -254,10 +258,11 @@ static void DrawMap(HDC hDC) {
 				break;
 			default:
 				assert(g_aMap[j][i] >= 1 && g_aMap[j][i] <= 8);
-				SelectObject(hDC, hNumBrush);
+				//SelectObject(hDC, hNumBrush);
 				szNumber[1] = TEXT('\0');
 				szNumber[0] = TEXT('0') + g_aMap[j][i];
 				FillRect(hDC, &rcBlock, hNumBrush);
+				SetTextColor(hDC, RGB(140,200,240));
 				DrawText(hDC,szNumber,-1,&rcBlock,DT_SINGLELINE|DT_CENTER|DT_VCENTER);
 				break;
 			}
@@ -333,12 +338,12 @@ error_format:
 	return TRUE;
 }
 
-static LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	//TCHAR wszInfo[1024];
 	//HINSTANCE hInstance = GetModuleHandle(NULL);
 	PAINTSTRUCT  ps;
 	
-	switch (Msg)
+	switch (uMsg)
 	{
 	case (WM_USER + 1):
 		/*
@@ -382,6 +387,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
 		}
 		break;
 	case WM_LBUTTONDOWN:
+	case WM_RBUTTONDOWN:
 		{
 			LONG x,y;
 			x = GET_X_LPARAM(lParam); 
@@ -391,8 +397,19 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
 				&&g_lpfnMapClickCallBack != NULL
 				&&x > MAP_LEFT && x < MAP_LEFT + BLOCK_WIDTH * g_uWidth 
 				&& y > MAP_TOP && y < MAP_TOP + BLOCK_WIDTH * g_uHeight) {
-				g_lpfnMapClickCallBack((x - MAP_LEFT) / BLOCK_WIDTH , (y - MAP_TOP) / BLOCK_WIDTH);
+
+				PCHAR p = &g_aMap[(x - MAP_LEFT) / BLOCK_WIDTH][(y - MAP_TOP) / BLOCK_WIDTH] ;
+				if(uMsg == WM_LBUTTONDOWN && *p == -1) //open
+					g_lpfnMapClickCallBack((x - MAP_LEFT) / BLOCK_WIDTH , (y - MAP_TOP) / BLOCK_WIDTH);
+				else if(uMsg == WM_RBUTTONDOWN) {
+					if(*p == -1)
+						*p = -2;//set up flag
+					else if(*p == -2)
+						*p = -1;//remove flag
+					ui_map_refresh();
+				}
 			} else if(g_lpfnStartButtonClickCallBack != NULL
+				&& uMsg == WM_LBUTTONDOWN
 				&& x > rcStartButton.left && x < rcStartButton.right 
 				&& y > rcStartButton.top && y < rcStartButton.bottom) {
 				SendMessage(hWnd, WM_COMMAND, IDC_START, 0);
@@ -412,7 +429,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPara
 		PostQuitMessage(0);
 		break;
 	default:
-		return DefWindowProc(hWnd, Msg, wParam, lParam);
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 	return 0;
 }
