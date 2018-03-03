@@ -6,22 +6,6 @@ static void startbtn_click() {
 	ui_map_clear();
 	ui_map_setenable(1);
 }
-/*
-static void update_ui(int width, int height) {
-	unsigned int w,h,n;
-	getconf(&w, &h, &n);
-	int i,j,num;
-	for(i = 0; i <= h; i++)
-		for(j = 0; j <= h; j++) {
-			if(getblock(x, y, &num) == 1) {
-				ui_map_setblock(x, y, num);
-			}
-
-		}
-	ui_map_refresh();
-}
-*/
-
 static int mapconfig_change(enum UI_MAP_LEVEL level, int w, int h, int n) {
 	switch(level) {
 	case EASY:
@@ -31,7 +15,7 @@ static int mapconfig_change(enum UI_MAP_LEVEL level, int w, int h, int n) {
 		w = 20, h = 20, n = 80;
 		break;
 	case DEFAULT:
-		w = 30, h = 16, n = 200;
+		w = 30, h = 16, n = 150;
 		break;
 	case CUSTOM:
 		if(w < 5 || w > 40 || h < 5 || h > 40 || n > w*h/2)

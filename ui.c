@@ -81,8 +81,8 @@ int ui_init(void) {
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-	wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+	wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP));
+	wc.hIconSm = NULL; //LoadIcon(NULL, IDI_APPLICATION);
 	wc.hInstance = hInstance;
 	wc.lpfnWndProc = WndProc;
 	wc.lpszClassName = szClassName;
@@ -226,7 +226,7 @@ static void DrawStartButton(HDC hDC) {
 
 static void DrawMap(HDC hDC) {
 	int 		i,j;
-	POINT 		pt;
+	//POINT 		pt;
 	RECT		rcClient,rcBlock;
 	HBRUSH 		hMineBrush, hDefaultBrush, hNumBrush, hZeroBrush;
 	HPEN		hLinePen;
@@ -346,7 +346,7 @@ static BOOL CALLBACK ConfigDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM
 		switch(HIWORD(wParam)) {
 			int iItemIndex;
 		case CBN_SELCHANGE:
-			iItemIndex = SendMessage(lParam, CB_GETCURSEL, 0, 0);
+			iItemIndex = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
 			if(iItemIndex <3) {
 				EnableWindow(GetDlgItem(hDlg, IDC_MAP_WIDTH), FALSE);
 				EnableWindow(GetDlgItem(hDlg, IDC_MAP_HEIGHT), FALSE);

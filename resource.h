@@ -8,5 +8,5 @@
 #define IDC_MAP_MINE_NUM 203
 
 #define IDC_LEVEL 204
-#define IDI_ICON 127
+#define IDI_APP 127
 #endif

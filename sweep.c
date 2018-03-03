@@ -89,7 +89,7 @@ void resetmap() {
 	for(i=0;i<nmines;i++) //Add mines to map
 		map[i%width][i/width].nmines = 9; 
 	//show_map();
-	for(i=0;i<nmines;i++) { //Dislocale mines which added before.
+	for(i=0;i<nmines;i++) { //Dislocate mines which added before.
 		randval = rand() % len;
 		p = &map[i%width][i/width]; 
 		q = &map[randval % width][randval/width];
@@ -104,6 +104,7 @@ void resetmap() {
 	//show_map();
 	for(i=0; i<height; i++) //generate number
 		for(j=0; j<width; j++) {
+
 #define INC_IFNOT_MINE(b){ \
 	if((b).nmines != 9) \
 		b.nmines ++; \
