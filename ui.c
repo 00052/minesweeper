@@ -15,6 +15,8 @@
 #define IDC_QUIT 3
 #define IDC_ABOUT 4
 
+#define ID_TIMER 1
+
 TCHAR szClassName[] = TEXT("MineSweeperClass");
 HWND hWnd;
 
@@ -33,9 +35,11 @@ static STARTBTN_CLICK	g_lpfnStartButtonClickCallBack;
 static MAP_CLICK	g_lpfnMapClickCallBack;
 static MAPCONFIG_CHANGE	g_lpfnMapConfigChangeCallBack;
 
+/*
+ -2:flag,-1:hide,0-8:number,9:mine*/
 static CHAR	 g_aMap[50][50];
 
-static UINT g_uWidth,g_uHeight;
+static UINT g_uWidth,g_uHeight, g_nMines, g_nTimePassed = 0;
 static RECT rcStartButton;
 
 static BOOL g_bMapEnable = FALSE;
@@ -43,6 +47,8 @@ static BOOL g_bMapEnable = FALSE;
 static HMENU hRootMenu;
 
 static const DWORD dwWindowStyle = WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX;
+
+static RECT g_rcLabel;
 
 static void __CreateMenu() {
 	HMENU hGameMenu,hHelpMenu;
@@ -104,6 +110,9 @@ int ui_init(void) {
 	g_bMapEnable = TRUE;
 
 	g_bInit = TRUE;
+
+	SetRect(&g_rcLabel, MAP_LEFT, MAP_LEFT, MAP_LEFT + 120, MAP_LEFT + 60);
+
 	return 0;
 
 }
@@ -168,7 +177,7 @@ int ui_reg_mapconfig_change(MAPCONFIG_CHANGE callback) {
 
 int ui_map_setblock(int x,int y,char n) {
 	assert(g_bInit == TRUE);
-	assert(n>=-1 && n<=9);
+	assert(n>=-2 && n<=9);
 	g_aMap[x][y] = n;
 	return 0;
 }
@@ -178,6 +187,12 @@ int ui_map_refresh(void) {
 	//GetClientRect(hWnd,&rcClient);
 	//UpdateWindow(hWnd);
 	InvalidateRect(hWnd,NULL,FALSE);
+	return 0;
+}
+
+int ui_set_nmines(int n) {
+	//printf("ui_set_nmines(%d)\n", n);
+	g_nMines = n;
 	return 0;
 }
 
@@ -216,8 +231,6 @@ static void DrawStartButton(HDC hDC) {
 	rcStartButton.left = rcStartButton.right - 120;
 	rcStartButton.top = 10;
 	rcStartButton.bottom = 70;
-	
-	
 
 	FillRect(hDC, &rcStartButton, hBrush);
 	FrameRect(hDC, &rcStartButton, hBrush);
@@ -284,6 +297,15 @@ static void DrawMap(HDC hDC) {
 		LineTo(hDC , MAP_LEFT + BLOCK_WIDTH * i,MAP_TOP+BLOCK_WIDTH * (g_uHeight ));
 	}
 
+}
+
+void DrawLabel(HDC hDC) {
+	CHAR szText[10];
+	SetTextColor(hDC, RGB(240,100,240));
+	FillRect(hDC, &g_rcLabel, GetStockBrush(LTGRAY_BRUSH));
+	//InvalidateRect(hWnd,&rc,TRUE);
+	sprintf(szText, "%03d   %03d", g_nMines, g_nTimePassed);
+	DrawTextA(hDC,szText ,-1 ,&g_rcLabel, DT_SINGLELINE|DT_CENTER|DT_VCENTER);
 }
 
 static BOOL CALLBACK ConfigDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam) {
@@ -418,6 +440,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			//DrawText(hDC,TEXT("0 / 0"),-1,&rcInfo,DT_SINGLELINE|DT_CENTER|DT_VCENTER);
 			DrawStartButton(hDC);
 			DrawMap(hDC);
+			DrawLabel(hDC);
 			EndPaint(hWnd,&ps);
 		}
 		break;
@@ -433,15 +456,18 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				&&x > MAP_LEFT && x < MAP_LEFT + BLOCK_WIDTH * g_uWidth 
 				&& y > MAP_TOP && y < MAP_TOP + BLOCK_WIDTH * g_uHeight) {
 
-				PCHAR p = &g_aMap[(x - MAP_LEFT) / BLOCK_WIDTH][(y - MAP_TOP) / BLOCK_WIDTH] ;
-				if(uMsg == WM_LBUTTONDOWN && *p == -1) //open
-					g_lpfnMapClickCallBack((x - MAP_LEFT) / BLOCK_WIDTH , (y - MAP_TOP) / BLOCK_WIDTH);
+				//PCHAR p = &g_aMap[(x - MAP_LEFT) / BLOCK_WIDTH][(y - MAP_TOP) / BLOCK_WIDTH] ;
+				if(uMsg == WM_LBUTTONDOWN /*&& *p == -1*/) //open
+					g_lpfnMapClickCallBack(LBUTTON, (x - MAP_LEFT) / BLOCK_WIDTH , (y - MAP_TOP) / BLOCK_WIDTH);
 				else if(uMsg == WM_RBUTTONDOWN) {
+					g_lpfnMapClickCallBack(RBUTTON, (x - MAP_LEFT) / BLOCK_WIDTH , (y - MAP_TOP) / BLOCK_WIDTH);
+					/*
 					if(*p == -1)
 						*p = -2;//set up flag
 					else if(*p == -2)
 						*p = -1;//remove flag
-					ui_map_refresh();
+					*/
+					//ui_map_refresh();
 				}
 			} else if(g_lpfnStartButtonClickCallBack != NULL
 				&& uMsg == WM_LBUTTONDOWN
@@ -468,3 +494,30 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	}
 	return 0;
 }
+static void CALLBACK TimerProc(HWND hWnd, UINT msg, UINT idTimer, DWORD dwTime) {
+	/*PAINTSTRUCT ps;
+	g_nTimePassed += 1;
+	HDC hDC=BeginPaint(hWnd,&ps);
+	SetBkMode(hDC,TRANSPARENT);
+	DrawLabel(hDC);
+	EndPaint(hWnd,&ps);*/
+	g_nTimePassed += 1;
+	InvalidateRect(hWnd, NULL, TRUE);
+	printf("timer\n");
+}
+
+int ui_timer_start() {
+	g_nTimePassed = 0;
+	SetTimer(hWnd, ID_TIMER, 1000, TimerProc); 
+	return 0;
+}
+
+int ui_timer_stop() {
+	KillTimer(hWnd, ID_TIMER);
+	return 0;
+}
+
+int ui_timer_value() {
+	return g_nTimePassed * 1000;
+}
+

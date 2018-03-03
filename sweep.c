@@ -7,12 +7,13 @@
 #define MAX_WIDTH 40
 #define MAX_HEIGHT 40
 struct block{
-	char shown : 1;
-	char nmines : 7;
+	unsigned char shown : 2;
+	char nmines : 6;
 };
 
-static size_t width, height, nmines;
+static size_t width, height, nmines, nflags;
 static struct block map[MAX_WIDTH][MAX_HEIGHT];
+
 //static int finished;
 static int configured = 0; 
 static int nrestblocks;
@@ -77,6 +78,8 @@ void resetmap() {
 
 	nrestblocks = width * height; //
 
+	nflags = 0;
+
 	//finished = 0;//not in playing flag
 	len = width * height;
 	
@@ -136,7 +139,7 @@ void resetmap() {
 
 }
 static void auto_sweep(unsigned int x, unsigned int y) {
-	if(x < 0 || x > width-1 || y < 0 || y > height-1)
+	if(x < 0 || x > width-1 || y < 0 || y > height-1 || map[x][y].shown == 2)
 		return;
 
 	if(map[x][y].shown == 0) {
@@ -198,21 +201,43 @@ enum CLICK_RESULT click(unsigned int x, unsigned int y) {
 			return NOBORM;
 	}
 }
-
+/*
 int gethidenum() {
 	return nrestblocks;
 }
-
-int getblock(unsigned int x, unsigned int y, unsigned char *pval) {
-	assert(pval != NULL);
-	assert(x < width && y < height && pval!=NULL);
-	assert(configured == 1);
-	if(map[x][y].shown) {
-		*pval = map[x][y].nmines;
-		return 1;
-	} else {
-		return 0;
+*/
+int sweep_rclick(unsigned x, unsigned y) {
+	if(map[x][y].shown != 1) {
+		printf("map.shown == %d\n", map[x][y].shown);
+		if(map[x][y].shown == 2) {
+			map[x][y].shown = 0;
+			nflags --;
+			printf("nflags --\n");
+		} else {
+			map[x][y].shown = 2;
+			nflags ++;
+			printf("nflags ++\n");
+		}
+		return 1;//succeed
 	}
+	return 0;//invalid click
+}
+
+int sweep_nflags() {
+	//if(nrestblocks != nmines)
+	return nflags;
+}
+
+/*
+ Ret Value: block.shown */
+int getblock(unsigned int x, unsigned int y, unsigned char *pval) {
+	//assert(pval != NULL);
+	assert(x < width && y < height);
+	assert(configured == 1);
+	if(map[x][y].shown == 1 && pval != NULL) {
+		*pval = map[x][y].nmines;
+	}
+	return map[x][y].shown;
 }	
 
 

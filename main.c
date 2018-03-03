@@ -5,6 +5,7 @@ static void startbtn_click() {
 	resetmap();
 	ui_map_clear();
 	ui_map_setenable(1);
+	ui_timer_start();
 }
 static int mapconfig_change(enum UI_MAP_LEVEL level, int w, int h, int n) {
 	switch(level) {
@@ -23,36 +24,57 @@ static int mapconfig_change(enum UI_MAP_LEVEL level, int w, int h, int n) {
 	}
 	setconf(w, h, n);
 	ui_map_setsize(w, h);
+	ui_set_nmines(n);
 	resetmap();
+	ui_timer_stop();
+	ui_timer_start();
 	ui_map_clear();
 	ui_map_setenable(1);
 	return 1;
 }
 
-static void map_click(int x,int y) {
-	enum CLICK_RESULT cr;
+static void map_click(enum UI_MOUSEBTN btn, int x,int y) {
 	unsigned int w,h,n;
-	unsigned char num;
-	int i,j;
 	getconf(&w, &h, &n);
-	cr = click(x,y);
-	for(i = 0; i < h; i++)
-		for(j = 0; j < w; j++) {
-			if(getblock(j, i, &num) == 1) {
-				ui_map_setblock(j, i, num);
-			}
+	if(btn == LBUTTON) {
+		enum CLICK_RESULT cr;
+		unsigned char num;
+		int i,j;
+		cr = click(x,y);
+		for(i = 0; i < h; i++)
+			for(j = 0; j < w; j++) {
+				if(getblock(j, i, &num) == 1) {
+					ui_map_setblock(j, i, num);
+				}
 
+			}
+		ui_map_refresh();
+		if(cr == BORM) {
+			ui_map_setenable(0);
+			ui_timer_stop();
+			ui_show_message("Boom !");
+		} else if(cr == WAN) {
+			ui_map_setenable(0);
+			ui_timer_stop();
+			ui_show_message("You Win.");
 		}
-	ui_map_refresh();
-	if(cr == BORM) {
-		ui_map_setenable(0);
-		ui_show_message("Boom !");
-	} else if(cr == WAN) {
-		ui_map_setenable(0);
-		ui_show_message("You Win.");
+	} else if(btn == RBUTTON) {
+		printf("right button\n");
+		if(sweep_rclick(x, y)) {
+			switch(getblock(x, y, NULL)) {
+			case 0:
+				ui_map_setblock(x, y, -1);
+				printf("ui_map_setblock(%d, %d, -1)\n", x, y);
+				break;
+			case 2:
+				ui_map_setblock(x, y, -2);
+				printf("ui_map_setblock(%d, %d, -2)\n", x, y);
+				break;
+			}
+			ui_set_nmines(n - sweep_nflags());
+			ui_map_refresh();
+		}
 	}
-	
-		
 }
 
 int main() {
