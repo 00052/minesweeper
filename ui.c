@@ -5,6 +5,9 @@
 #include <assert.h>
 #include "ui.h"
 #include "resource.h"
+#pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "user32.lib")
+
 
 #define MAP_LEFT 10
 #define MAP_TOP 80

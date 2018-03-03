@@ -1,6 +1,5 @@
 CC=gcc
 CFLAGS= -Wall
-
 all:minesweeper.exe
 minesweeper.exe: main.o ui.o sweep.o resource.res
 	#gcc -o $@ $* $^ -lGdi32
