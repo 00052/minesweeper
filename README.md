@@ -7,6 +7,10 @@
 
 ## 编译 ##
 
-开发环境为MINGW32，使用make命令编译。
+使用MinGW make或者Visual Studio Nmake命令编译。
+
+1. `make -f Makefile.mingw` 
+
+2. `nmake /f Makefile.vc`
 
 该程序的发布遵循 GNU GPL v2 及以上版本
