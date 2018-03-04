@@ -1,6 +1,6 @@
 # MineSweeper #
 
-一个经典的扫雷程序，实现了扫雷游戏的基本功能
+一个原生Win32经典的扫雷程序，实现了游戏的基本功能
 ## 截图 ##
 
 ![screenshot](screenshot.png)
