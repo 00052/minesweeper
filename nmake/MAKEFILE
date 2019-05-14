@@ -1,0 +1,19 @@
+SHELL=cmd.exe
+CC=cl
+CFLAGS=/c /nologo
+LINK=link
+RC=rc
+all: minesweeper.exe
+minesweeper.exe: main.obj ui.obj sweep.obj resource.res
+	$(LINK) /out:$@ $** 
+
+ui.obj: ui.c ui.h
+	$(CC) $(CFLAGS) ui.c gdi32.lib user32.lib
+
+resource.res: resource.rc resource.h
+	$(RC) resource.rc
+
+clean:
+	-del minesweeper.exe
+	-del *.obj
+	-del resource.res
